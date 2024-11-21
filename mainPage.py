@@ -17,22 +17,45 @@ def allowed_file(filename):
 
 # Function to store data in MongoDB
 def store_in_mongodb(data, json_name):
-    collection = mongo_db["data_collection"]
-    collection.drop()  # Clear old data before inserting new
-    collection.insert_many(data.to_dict(orient='records'))
-    collectionName = json_name[:-5]
-    mongodb_list.append(collectionName)
+    collection_name = json_name.rsplit('.', 1)[0]
+    collection = mongo_db[collection_name]
+    collection.delete_many({})
+    # Insert DataFrame data into the collection
+    try:
+        # Convert DataFrame to a list of dictionaries
+        records = data.to_dict(orient='records')
+        if records:  # Check if the DataFrame is not empty
+            collection.insert_many(records)
+            print(f"Inserted {len(records)} records into '{collection_name}' collection.")
+        else:
+            print(f"The DataFrame is empty. No records inserted into '{collection_name}'.")
+        # Track the collection name
+        mongodb_list.append(collection_name)
+    except Exception as e:
+        print(f"Error inserting data into MongoDB: {e}")
 
 def make_sql_db(df, csv_name):
     conn = sqlite3.connect("sql")
     tableName = csv_name[:-4]
     print(tableName)
     df.to_sql(tableName, conn, if_exists='replace', index=False)
-    sqldb_list.append()
+    # sqldb_list.append()
+
+def gen_sql_queries(df):
+    print(None)
+    # implement here
+
+def view_mongodb_head():
+    collection = mongo_db["data_collection"]
+    # Fetch the first 5 documents
+    documents = list(collection.find().limit(5))
+    for idx, doc in enumerate(documents, start=1):
+        print(f"Document {idx}: {doc}")
+    print(f"Displayed {len(documents)} document(s).")
 
 
 # ------------------------------------------------------------------------------------------------------------------------------------
-
+# run with streamlit run mainPage.py
 
 
 # Set up the main Streamlit app
